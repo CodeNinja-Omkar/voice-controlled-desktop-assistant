@@ -1,6 +1,10 @@
 import subprocess
 import logging
 from datetime import datetime
+import ctypes
+import pyautogui
+from pathlib import Path
+
 
 logger = logging.getLogger(__name__)
 
@@ -235,3 +239,25 @@ def close_application(name: str) -> str:
         return f"Closed {name}."
     logger.warning("taskkill failed for %s: %s", process_name, result.stderr)
     return f"Could not find {name} running."
+
+def take_screenshot(parameters: dict) -> str:
+    now = datetime.now()
+    timestamp = now.strftime("%Y%m%d_%H%M%S")
+    save_path = Path.home() / "Desktop" / f"screenshot_{timestamp}.png"
+    pyautogui.screenshot(str(save_path))
+    return f"Screenshot saved to Desktop as screenshot_{timestamp}.png"
+
+
+def lock_screen(parameters: dict) -> str:
+    ctypes.windll.user32.LockWorkStation()
+    return "Screen locked."
+
+
+def sleep_system(parameters: dict) -> str:
+    # SetSuspendState(hibernate=0, force=1, wakeup_events_disabled=0)
+    # Some BIOS configs may ignore this — no reliable fallback on Windows without admin
+    subprocess.run(
+        ["rundll32.exe", "powrprof.dll,SetSuspendState", "0,1,0"],
+        check=True,
+    )
+    return "Going to sleep."
